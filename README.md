@@ -21,7 +21,7 @@ This Python application provides a graphical user interface (GUI) for executing 
 1. **Clone the repository** or download the script file directly:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/sansayan01/DocUzip
 
 
 Description
