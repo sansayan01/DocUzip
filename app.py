@@ -3,11 +3,15 @@ import re
 import zipfile
 import os
 import traceback
-import ctypes
+import json
 from io import StringIO
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore
 
 from docx import Document  # Ensure this import is at the top
+
+# File paths for persistence
+HISTORY_FILE = "history.json"
+CODE_STORE_FILE = "code_store.json"
 
 # Store history and code data
 history = []
@@ -22,10 +26,44 @@ def preprocess_code(code):
     
     return import_statement + code
 
+def save_history():
+    try:
+        with open(HISTORY_FILE, "w") as file:
+            json.dump(history, file)
+    except Exception as e:
+        print(f"Error saving history: {e}")
+
+def load_history():
+    global history
+    try:
+        if os.path.exists(HISTORY_FILE):
+            with open(HISTORY_FILE, "r") as file:
+                history = json.load(file)
+    except Exception as e:
+        print(f"Error loading history: {e}")
+
+def save_code_store():
+    try:
+        with open(CODE_STORE_FILE, "w") as file:
+            json.dump(code_store, file)
+    except Exception as e:
+        print(f"Error saving code store: {e}")
+
+def load_code_store():
+    global code_store
+    try:
+        if os.path.exists(CODE_STORE_FILE):
+            with open(CODE_STORE_FILE, "r") as file:
+                code_store = json.load(file)
+    except Exception as e:
+        print(f"Error loading code store: {e}")
+
 class PythonToDOCXApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.is_dark_mode = True  # Set to dark mode by default
+        load_history()
+        load_code_store()
+        self.is_dark_mode = True
         self.init_ui()
 
     def init_ui(self):
@@ -219,6 +257,11 @@ class PythonToDOCXApp(QtWidgets.QWidget):
         self.history_window = HistoryWindow()
         self.history_window.show()
 
+    def closeEvent(self, event):
+        save_history()
+        save_code_store()
+        event.accept()
+
 class HistoryWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -232,7 +275,6 @@ class HistoryWindow(QtWidgets.QWidget):
         self.history_table = QtWidgets.QTableWidget()
         self.history_table.setColumnCount(5)
         self.history_table.setHorizontalHeaderLabels(["Serial No", "Timestamp", "File Type", "Open", "Copy Text"])
-        self.history_table.setRowCount(len(history))
         self.update_history_table()
         
         layout.addWidget(self.history_table)
@@ -257,32 +299,25 @@ class HistoryWindow(QtWidgets.QWidget):
             self.history_table.setCellWidget(row, 4, copy_button)
 
     def open_code(self, serial):
+        # Open the code from the store
         code = code_store.get(serial, "")
         if code:
-            code_window = QtWidgets.QWidget()
-            code_window.setWindowTitle(f"Code for Entry {serial}")
-            code_window.setGeometry(200, 200, 800, 600)
-            
-            # Layout
-            layout = QtWidgets.QVBoxLayout(code_window)
-            
-            # Code Display
-            code_text_edit = QtWidgets.QPlainTextEdit()
-            code_text_edit.setPlainText(code)
-            code_text_edit.setReadOnly(True)
-            layout.addWidget(code_text_edit)
-            
-            code_window.setLayout(layout)
-            code_window.show()
+            QtWidgets.QMessageBox.information(self, "Code", f"Code for Serial No {serial}:\n\n{code}")
+        else:
+            QtWidgets.QMessageBox.warning(self, "Error", f"No code found for Serial No {serial}")
 
     def copy_text(self, serial):
+        # Copy the code to clipboard
         code = code_store.get(serial, "")
         if code:
             clipboard = QtWidgets.QApplication.clipboard()
             clipboard.setText(code)
+            QtWidgets.QMessageBox.information(self, "Success", "Code copied to clipboard.")
+        else:
+            QtWidgets.QMessageBox.warning(self, "Error", "No code found for this serial number.")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
-    window = PythonToDOCXApp()
-    window.show()
+    ex = PythonToDOCXApp()
+    ex.show()
     sys.exit(app.exec_())
