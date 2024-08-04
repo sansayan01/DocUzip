@@ -1,6 +1,5 @@
 python-docx
 zipfile36
-tkinter
 pandas
 numpy
 openpyxl
