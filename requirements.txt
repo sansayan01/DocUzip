@@ -4,3 +4,4 @@ tkinter
 pandas
 numpy
 openpyxl
+PyQt5==5.15.9
