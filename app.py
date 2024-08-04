@@ -6,6 +6,7 @@ import re
 import zipfile
 import os
 import ctypes
+from docx import Document  # Ensure this import is at the top
 
 def preprocess_code(code):
     # Add the import statement at the beginning
@@ -50,11 +51,7 @@ def execute_code():
         
         # Example: If code creates a DOCX file named 'example.docx'
         # Add the names of generated DOCX files to the list
-        docx_files.append('example.docx')  # Adjust based on actual output
-        
-        # Example: If code creates a ZIP file named 'archive.zip'
-        # Add the names of generated ZIP files to the list
-        zip_files.append('archive.zip')  # Adjust based on actual output
+        docx_files.append('questions.docx')  # Adjust based on actual output
         
         # Determine which type of file to provide
         if zip_files:
